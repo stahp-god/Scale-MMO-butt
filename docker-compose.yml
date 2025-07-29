@@ -1,0 +1,53 @@
+
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  login-gateway:
+    build:
+      context: ./login-gateway
+    container_name: login-gateway
+    ports:
+      - "3724:3724"
+    depends_on:
+      - redis
+    restart: always
+
+  token-issuer:
+    build:
+      context: ./token-issuer
+    container_name: token-issuer
+    ports:
+      - "4200:4200"
+    restart: always
+
+  realm-registry:
+    build:
+      context: ./realm-registry
+    container_name: realm-registry
+    ports:
+      - "4100:4100"
+    depends_on:
+      - redis
+    restart: always
+
+  session-broker:
+    build:
+      context: ./session-broker
+    container_name: session-broker
+    ports:
+      - "4000:4000"
+    depends_on:
+      - token-issuer
+      - realm-registry
+    restart: always
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,42 @@
+
+diff --git a/src/server/worldserver/Main.cpp b/src/server/worldserver/Main.cpp
+index abcdef0..789abcd 100644
+--- a/src/server/worldserver/Main.cpp
++++ b/src/server/worldserver/Main.cpp
+@@ -42,6 +42,10 @@
+ #include "WorldSocketMgr.h"
+ #include "WorldStatePackets.h"
+
++#include <thread>
++#include <chrono>
++#include <curl/curl.h>
++
+ using namespace std::chrono_literals;
+
+ extern int main(int argc, char** argv)
+@@ int main(int argc, char** argv)
+     // Start the world server
+     WorldServer world;
+     world.Startup();
++
++    // Realm Registry Ping Thread
++    std::thread([](){
++        std::this_thread::sleep_for(std::chrono::seconds(5)); // Wait for startup
++        while (true)
++        {
++            CURL* curl = curl_easy_init();
++            if (curl)
++            {
++                int players = sWorld->GetActiveSessionCount();
++                std::string url = "http://127.0.0.1:4100/register?id=realm1&ip=127.0.0.1&port=8130&players=" + std::to_string(players);
++                curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
++                curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
++                CURLcode res = curl_easy_perform(curl);
++                curl_easy_cleanup(curl);
++            }
++            std::this_thread::sleep_for(std::chrono::seconds(30));
++        }
++    }).detach();
++
+     return world.Run();
+ }

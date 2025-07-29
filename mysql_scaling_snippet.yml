@@ -1,0 +1,37 @@
+
+# Append this to your docker-compose.yml for MySQL master-replica scaling
+
+  mysql-master:
+    image: mysql:8.0
+    container_name: mysql-master
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: trinity
+      MYSQL_USER: trinity
+      MYSQL_PASSWORD: trinitypass
+    ports:
+      - "3306:3306"
+    volumes:
+      - master-data:/var/lib/mysql
+    restart: always
+
+  mysql-replica:
+    image: mysql:8.0
+    container_name: mysql-replica
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: trinity
+      MYSQL_USER: trinity
+      MYSQL_PASSWORD: trinitypass
+      MYSQL_REPLICATION_MODE: slave
+    ports:
+      - "3307:3306"
+    depends_on:
+      - mysql-master
+    volumes:
+      - replica-data:/var/lib/mysql
+    restart: always
+
+volumes:
+  master-data:
+  replica-data:
